@@ -3,9 +3,9 @@ package com.itechart.task.commuterangeproblem.service;
 import com.itechart.task.commuterangeproblem.repository.ICityDistanceRepository;
 import lombok.Builder;
 
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CommuteRangeWorker {
@@ -21,7 +21,7 @@ public class CommuteRangeWorker {
         this.repository = repository;
     }
 
-    private Set<Integer> visited = new HashSet<>();
+    private Map<Integer, Integer> visited = new HashMap<>();
 
     /**
      * Public method to perform a search for reachable cities
@@ -33,7 +33,7 @@ public class CommuteRangeWorker {
         }
         int cityId = repository.getIdOfCity(city);
         getReachableCitiesInSpecifiedTime(cityId, time);
-        return visited
+        return visited.keySet()
                 .stream()
                     .map(id -> repository.getCityById(id))
                         .collect(Collectors.toList());
@@ -46,11 +46,13 @@ public class CommuteRangeWorker {
      */
     private void getReachableCitiesInSpecifiedTime(int startCity, int time) {
         //TODO refactor to avoid class element
-        visited.add(startCity);
+        visited.put(startCity, time);
         for (int i = 0; i < repository.getNumberOfCities(); i++) {
             int timeBetween = repository.getCommuteBetweenCities(startCity, i);
             if (timeBetween > 0) {
-                if (time >= timeBetween && !visited.contains(i)) {
+                if (time >= timeBetween
+                        && (visited.get(i) == null
+                            || (visited.get(i) != null && visited.get(i) < time - timeBetween))) {
                     getReachableCitiesInSpecifiedTime(i, time - timeBetween);
                 }
             }
